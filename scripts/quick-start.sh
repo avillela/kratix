@@ -11,6 +11,7 @@ PLATFORM_WORKER="${ROOT}/config/samples/platform_v1alpha1_worker_cluster.yaml"
 GITOPS_WORKER_INSTALL="${ROOT}/hack/worker/gitops-tk-install.yaml"
 GITOPS_WORKER_RESOURCES="${ROOT}/hack/worker/gitops-tk-resources.yaml"
 
+NO_PATCH=false
 RECREATE=false
 LOCAL_IMAGES=false
 VERSION=${VERSION:-"$(cd $ROOT; git branch --show-current)"}
@@ -33,16 +34,18 @@ load_options() {
         '--help')     set -- "$@" '-h'   ;;
         '--recreate') set -- "$@" '-r'   ;;
         '--local')    set -- "$@" '-l'   ;;
+        '--no-patch') set -- "$@" '-n'   ;;
         *)            set -- "$@" "$arg" ;;
       esac
     done
 
     OPTIND=1
-    while getopts "hrl" opt
+    while getopts "hrln" opt
     do
       case "$opt" in
         'r') RECREATE=true ;;
         'h') usage ;;
+        'n') NO_PATCH=true ;;
         'l') LOCAL_IMAGES=true ;;
         *) usage 1 ;;
       esac
@@ -112,6 +115,9 @@ verify_prerequisites() {
 }
 
 patch_kind_networking() {
+    if ${NO_PATCH}; then
+        return
+    fi
     PLATFORM_CLUSTER_IP=`docker inspect platform-control-plane | grep '"IPAddress": "172' | awk '{print $2}' | awk -F '"' '{print $2}'`
     sed -i'' -e "s/172.18.0.2/$PLATFORM_CLUSTER_IP/g" ${ROOT}/hack/worker/gitops-tk-resources.yaml
     rm -f ${ROOT}/hack/worker/gitops-tk-resources.yaml-e
