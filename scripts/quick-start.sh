@@ -187,6 +187,17 @@ install_kratix() {
         error "Could not create platform cluster"
         exit 1
     fi
+    docker pull syntasso/kratix-platform-work-creator:a8ecc5698298a1ff4fa777822df30d3b8fab326d
+    docker pull bitnami/kubectl:1.20.10
+    docker pull syntasso/kratix-platform:a8ecc5698298a1ff4fa777822df30d3b8fab326d
+    docker pull virtuslab/jenkins-operator:v0.7.1
+    docker pull minio/minio:RELEASE.2022-06-30T20-58-09Z
+
+    kind load docker-image syntasso/kratix-platform:a8ecc5698298a1ff4fa777822df30d3b8fab326d --name platform
+    kind load docker-image syntasso/kratix-platform-work-creator:a8ecc5698298a1ff4fa777822df30d3b8fab326d --name platform
+    kind load docker-image bitnami/kubectl:1.20.10 --name platform
+    kind load docker-image syntasso/jenkins-request-pipeline --name platform
+    kind load docker-image minio/minio:RELEASE.2022-06-30T20-58-09Z --name platform
 
     if ${LOCAL_IMAGES}; then
         build_and_load_local_images
@@ -205,6 +216,10 @@ install_kratix() {
         error "Could not create worker cluster"
         exit 1
     fi
+
+    docker pull jenkins/jenkins:2.332.2-jdk17
+    kind load docker-image virtuslab/jenkins-operator:v0.7.1 --name worker
+    kind load docker-image jenkins/jenkins:2.332.2-jdk17 --name worker
 
     log -n "Waiting for MinIO to be running..."
     if ! SUPRESS_OUTPUT=true run wait_for_minio; then
