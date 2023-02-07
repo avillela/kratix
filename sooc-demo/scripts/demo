@@ -1,0 +1,230 @@
+#!/usr/bin/env bash
+
+########################
+# include the magic
+########################
+PWD="$( cd $(dirname $0)/.. && pwd)"
+. ${PWD}/scripts/demo_magic
+
+########################
+# HIDDEN
+echo 'alias kubectl="/opt/homebrew/bin/kubecolor"' >> ~/.bashrc
+source ~/.bashrc
+clear
+########################
+
+pe "kubectl config current-context"
+pe "kubectl get pods -n kratix-platform-system -l control-plane=controller-manager"
+
+pe "svn export https://github.com/syntasso/kratix-marketplace.git/trunk/slack ./database"
+pe "cd database && ls -lh"
+pe "bat README.md -r :17"
+
+########################
+# HIDDEN
+export LPASS_DISABLE_PINENTRY=1
+lpass login "abby@syntasso.io" <<<"$LPASS_PASSWORD" > /dev/null 2>&1;
+kubectl --context kind-platform --namespace default create secret generic \
+  slack-channel-hook --from-literal=url=$(lpass show 9219319863198172968 --password) > /dev/null 2>&1;
+########################
+
+pe "kubectl get secrets"
+
+########################
+# HIDDEN
+wait # Required or else clears previous output before showcasing
+clear -x
+########################
+
+pe "bat promise.yaml -r :38"
+
+pe "kubectl apply --filename promise.yaml"
+
+pe "kubectl get promises"
+pe "kubectl get crds | grep marketplace"
+
+pe "bat resource-request.yaml"
+pe "code ."
+########################
+# HIDDEN
+echo -n "Hello State of Open Con! :openuk:" | pbcopy
+wait
+########################
+
+
+pe "kubectl apply --filename resource-request.yaml"
+
+pe "kubectl get slacks"
+pe "kubectl get pods"
+
+########################
+# HIDDEN
+wait # Required or else clears previous output before showcasing
+clear -x
+########################
+
+unset TYPE_SPEED
+NO_WAIT=true
+p "${BOLD}${PURPLE}To provide databases-as-a-service from this example:${COLOR_RESET}"
+sleep 1
+p "\t${PURPLE}1. rename the Promise to database (other than secret name!)${COLOR_RESET}"
+wait
+p "\t${PURPLE}2. add the required fields for a typical request${COLOR_RESET}"
+########################
+# HIDDEN
+echo -n "                    - name
+                    - provider
+                    - size" | pbcopy; sleep 2; echo -n "                    name:
+                      type: string
+                      description: This should clearly describe the use of this database
+                    provider:
+                      type: string
+                      description: What structure of data storage do you want?
+                      pattern: ^(MongoDB|PostgreSQL|Neo4j|DynamoDB)$
+                    size:
+                      type: integer
+                      description: Amount of required storage (in gigabytes)" | pbcopy
+
+wait
+########################
+
+p "\t${PURPLE}3. use these fields for the slack message${COLOR_RESET}"
+
+########################
+# HIDDEN
+echo -n "name=\"\$(yq eval '.spec.name' /input/object.yaml)\"
+provider=\"\$(yq eval '.spec.provider' /input/object.yaml)\"
+size=\"\$(yq eval '.spec.size' /input/object.yaml)\"" | pbcopy; sleep 2; echo 'message="*Database request:*
+
+name: ${name}
+provider: ${provider}
+size: ${size}"' | pbcopy
+wait
+########################
+
+p "\t${PURPLE}4. change the Resource Request kind and fill in the new fields${COLOR_RESET}"
+
+########################
+# HIDDEN
+echo -n "  name: sooc
+  provider: MySQL
+  size: 10" | pbcopy
+wait
+########################
+NO_WAIT=false
+p "\t${PURPLE}5. rebuild the docker image into the cluster${COLOR_RESET}"
+TYPE_SPEED=20
+
+pei "./internal/scripts/pipeline-image build load"
+
+pe "kubectl apply --filename promise.yaml"
+
+pe "kubectl get promises"
+pe "kubectl get crds | grep marketplace"
+
+pe "kubectl apply --filename resource-request.yaml"
+echo -n "PostgreSQL" | pbcopy
+
+pe "kubectl apply --filename resource-request.yaml"
+
+pe "kubectl get databases"
+
+pe "kubectl get pods"
+
+########################
+# HIDDEN
+wait # Required or else clears previous output before showcasing
+clear -x
+########################
+
+unset TYPE_SPEED
+NO_WAIT=true
+p "${BOLD}${PURPLE}Steps to change the backend from Slack -> Jira:${COLOR_RESET}"
+sleep 1
+p "\t${PURPLE}1. create a new secret to allow posting to Jira${COLOR_RESET}"
+########################
+# HIDDEN
+export LPASS_DISABLE_PINENTRY=1
+lpass login "abby@syntasso.io" <<<"$LPASS_PASSWORD" > /dev/null 2>&1;
+kubectl --context kind-platform --namespace default create secret generic \
+  jira-api-auth --from-literal=key=$(lpass show 3201877747026014159 --password) > /dev/null 2>&1;
+wait
+########################
+
+pe "kubectl get secrets"
+wait
+
+p "\t${PURPLE}2. add the new secret to the Promise permissions${COLOR_RESET}"
+########################
+# HIDDEN
+echo -n "- jira-api-auth" | pbcopy
+wait
+########################
+
+p "\t${PURPLE}3. change pipeline again to post to Jira${COLOR_RESET}"
+########################
+# HIDDEN
+echo -n "jira_key=\"\$(kubectl get secret jira-api-auth -o=jsonpath='{.data.key}')\"" | pbcopy; \
+  sleep 2; \
+  echo -n "RESP=\$(curl \\
+  --request POST \\
+  --url 'https://abby-test.atlassian.net/rest/api/3/issue' \\
+  --header \"Authorization: Basic \${jira_key}\" \\
+  --header 'Accept: application/json' \\
+  --header 'Content-Type: application/json' \\
+  --data \"
+{
+  \\\"fields\\\": {
+    \\\"project\\\": {
+      \\\"key\\\": \\\"PLAT\\\"
+    },
+    \\\"summary\\\": \\\"New database request: \${name}\\\",
+    \\\"description\\\": {
+      \\\"type\\\": \\\"doc\\\",
+      \\\"version\\\": 1,
+      \\\"content\\\": [
+        {
+          \\\"type\\\": \\\"paragraph\\\",
+          \\\"content\\\": [
+            {
+              \\\"text\\\": \\\"Created via Kratix request\\\",
+              \\\"type\\\": \\\"text\\\"
+            }
+          ]
+        }
+      ]
+    },
+    \\\"issuetype\\\": {
+      \\\"id\\\": \\\"10001\\\"
+    },
+    \\\"customfield_10034\\\": \\\"\${name}\\\",
+    \\\"customfield_10035\\\": {
+        \\\"value\\\": \\\"\${provider}\\\"
+    },
+    \\\"customfield_10037\\\": \${size}
+  }
+}\")
+
+message=\"New database request: https://abby-test.atlassian.net/browse/\$(echo \$RESP|yq .key)\"" | pbcopy
+wait
+########################
+
+p "\t${PURPLE}4. build and load the pipeline image again${COLOR_RESET}"
+wait
+
+NO_WAIT=false
+p "\t${PURPLE}5. update the Resource Request name${COLOR_RESET}"
+TYPE_SPEED=20
+
+pei "./internal/scripts/pipeline-image build load"
+
+pe "kubectl apply --filename promise.yaml"
+
+pe "kubectl apply --filename resource-request.yaml"
+
+pe "kubectl get databases"
+
+pe "kubectl get pods"
+
+p "${BOLD}${PURPLE}Thank you! Back to the slide deck now 👀${COLOR_RESET}"
+wait

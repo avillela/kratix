@@ -1,0 +1,14 @@
+#!/bin/bash
+
+if [ -z $LPASS_PASSWORD ]; then
+  echo "LPASS_PASSWORD must be set to auth to lpass"
+  exit 1
+fi
+
+PWD="$( cd $(dirname $0)/.. && pwd)"
+rm -rf ${PWD}/database
+
+kratix-up
+
+docker pull ghcr.io/syntasso/kratix-marketplace/slack-request-pipeline:v0.1.0
+kind load docker-image --name platform ghcr.io/syntasso/kratix-marketplace/slack-request-pipeline:v0.1.0
