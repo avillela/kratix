@@ -18,7 +18,7 @@ type giteaProvider struct {
 }
 
 func NewGiteaProvider() (*giteaProvider, error) {
-	giteaServer := "https://gitea-http.gitea.svc.cluster.local/gitea_admin/"
+	giteaServer := "https://gitea-http.gitea.svc.cluster.local"
 	auth := &ghttp.BasicAuth{
 		Username: "gitea_admin",
 		Password: "r8sA8CPHD9!bt6d",
