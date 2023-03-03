@@ -14,6 +14,7 @@ import (
 type giteaProvider struct {
 	*baseClient
 	client    *gitea.Client
+	org       string
 	serverURL string
 }
 
@@ -42,26 +43,30 @@ func NewGiteaProvider() (*giteaProvider, error) {
 		client:     client,
 		serverURL:  giteaServer,
 		baseClient: NewBaseClient(auth),
+		org:        "gitea_admin",
 	}, nil
 }
 
-func (g *giteaProvider) CloneOrCreate(org, name string) (*git.Repository, error) {
-	repo, err := g.Clone(g.serverURL, name)
+func (g *giteaProvider) CloneOrCreate(repoName, path string) (*git.Repository, error) {
+	repoURL := fmt.Sprintf("%s/%s/%s", g.serverURL, g.org, repoName)
+	repo, err := g.Clone(repoURL, path)
 
 	if err != nil {
-		fmt.Println("Error cloning repo: ", err)
 		switch err.Error() {
 		case "repository not found":
 			_, _, err := g.client.CreateRepo(gitea.CreateRepoOption{
-				Name:          name,
+				Name:          repoName,
 				Private:       false,
 				DefaultBranch: "main",
+				AutoInit:      true,
 			})
 			if err != nil {
 				return nil, errors.Wrap(err, "failed to create repo")
 			}
 
-			return g.CloneOrCreate(org, name)
+			return g.CloneOrCreate(repoName, path)
+		case "remote repository is empty":
+			return g.Init(repoURL, path)
 		default:
 			return nil, errors.Wrap(err, "failed to clone repo")
 		}

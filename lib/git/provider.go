@@ -19,7 +19,7 @@ const (
 	Gitea string = "gitea"
 )
 
-func NewProvider(logger logr.Logger, opt Options) (Provider, error) {
+func NewProvider(opt Options) (Provider, error) {
 	switch opt.Type {
 	case "gitea":
 		return NewGiteaProvider()

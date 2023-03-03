@@ -33,7 +33,7 @@ const (
 )
 
 func newGitBucketWriter(logger logr.Logger) (BucketWriter, error) {
-	gitClient, err := gitk.NewProvider(logger, gitk.Options{Type: gitk.Gitea})
+	gitClient, err := gitk.NewProvider(gitk.Options{Type: gitk.Gitea})
 	if err != nil {
 		logger.Error(err, "Error creating git client")
 		return nil, err

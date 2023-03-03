@@ -7,9 +7,12 @@ import (
 	"time"
 
 	"github.com/go-git/go-git/v5"
+	"github.com/go-git/go-git/v5/config"
+	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/go-git/go-git/v5/plumbing/object"
 	"github.com/go-git/go-git/v5/plumbing/transport/http"
 	"github.com/go-logr/logr"
+	"github.com/pkg/errors"
 )
 
 type gitAuthor struct {
@@ -37,10 +40,28 @@ func NewBaseClient(auth *http.BasicAuth) *baseClient {
 	}
 }
 
-func (b *baseClient) Clone(url, repoName string) (*git.Repository, error) {
-	return git.PlainClone(repoName, false, &git.CloneOptions{
+func (b *baseClient) Init(repositoryURL, path string) (*git.Repository, error) {
+	repo, err := git.PlainInit(path, false)
+	if err != nil {
+		return nil, errors.Wrap(err, "could not initialise repository")
+	}
+
+	_, err = repo.CreateRemote(&config.RemoteConfig{
+		Name: "origin",
+		URLs: []string{repositoryURL},
+	})
+	if err != nil {
+		return nil, errors.Wrap(err, "could not create remote")
+	}
+
+	return repo, nil
+}
+
+func (b *baseClient) Clone(repositoryURL, path string) (*git.Repository, error) {
+	return git.PlainClone(path, false, &git.CloneOptions{
 		Auth:            b.auth,
-		URL:             url,
+		URL:             repositoryURL,
+		ReferenceName:   plumbing.NewBranchReferenceName("main"),
 		SingleBranch:    true,
 		Depth:           1,
 		NoCheckout:      false,

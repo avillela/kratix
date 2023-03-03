@@ -19,7 +19,7 @@ spec:
   interval: 5s
   url: https://gitea-http.gitea.svc.cluster.local/gitea_admin/platform-cluster-worker-1-kratix-resources
   ref:
-    branch: master
+    branch: main
   secretRef:
     name: gitea-credentials
 ---
@@ -47,7 +47,7 @@ spec:
   interval: 5s
   url: https://gitea-http.gitea.svc.cluster.local/gitea_admin/platform-cluster-worker-1-kratix-crds
   ref:
-    branch: master
+    branch: main
   secretRef:
     name: gitea-credentials
 ---
