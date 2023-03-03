@@ -10,7 +10,7 @@ type Options struct {
 }
 
 type Provider interface {
-	CloneOrCreate(org, name string) (*git.Repository, error)
+	CloneOrCreate(repoName, path string) (*git.Repository, error)
 	RemoveFile(repo *git.Repository, objectName string, log logr.Logger) error
 	AddFile(repo *git.Repository, repoPath, objectName string, toWrite []byte, log logr.Logger) error
 }
