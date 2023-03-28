@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    run: TBDNAME
+  name: TBDNAME
+  namespace: default
+spec:
+  selector:
+    matchLabels:
+      run: TBDNAME
+  template:
+    metadata:
+      labels:
+        run: TBDNAME
+    spec:
+      containers:
+      - image: TBDIMAGE
+        ports:
+        - containerPort: 8080
+        env:
+          - name: PGPASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: postgres.acid-TBDNAME-postgresql.credentials.postgresql.acid.zalan.do
+                key: password
+          - name: PGHOST
+            value: acid-TBDNAME-postgresql.default.svc.cluster.local
+          - name: DBNAME
+            value: TBDNAMEdb
+        imagePullPolicy: Always
+        name: TBDNAME
