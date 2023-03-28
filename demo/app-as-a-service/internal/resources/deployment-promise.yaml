@@ -32,4 +32,4 @@ spec:
   clusterSelector:
     environment: dev
   xaasRequestPipeline:
-    - syntasso/demo-deployment-request-pipeline:v0.1.0
+    - syntasso/demo-deployment-request-pipeline:v0.1.1

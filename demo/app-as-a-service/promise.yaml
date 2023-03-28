@@ -42,7 +42,7 @@ spec:
             served: true
             storage: true
       xaasRequestPipeline:
-      - syntasso/demo-deployment-request-pipeline:v0.1.0
+      - syntasso/demo-deployment-request-pipeline:v0.1.1
   - apiVersion: platform.kratix.io/v1alpha1
     kind: Promise
     metadata:
@@ -6652,7 +6652,7 @@ spec:
             served: true
             storage: true
       xaasRequestPipeline:
-      - syntasso/demo-postgresql-request-pipeline:v0.1.0
+      - syntasso/demo-postgresql-request-pipeline:v0.1.1
     status: {}
   - apiVersion: platform.kratix.io/v1alpha1
     kind: Promise
@@ -10120,7 +10120,7 @@ spec:
             served: true
             storage: true
       xaasRequestPipeline:
-      - syntasso/demo-redis-request-pipeline:v0.1.0
+      - syntasso/demo-redis-request-pipeline:v0.1.1
     status: {}
   - apiVersion: platform.kratix.io/v1alpha1
     kind: Promise
@@ -10228,5 +10228,5 @@ spec:
         served: true
         storage: true
   xaasRequestPipeline:
-  - syntasso/demo-app-as-a-service-request-pipeline:v0.1.0
+  - syntasso/demo-app-as-a-service-request-pipeline:v0.1.1
 status: {}
