@@ -1,8 +1,8 @@
 apiVersion: operator.knative.dev/v1beta1
 kind: KnativeServing
 metadata:
-  name: TBDNAME
-  namespace: TBDNAMESPACE
+  name: knative
+  namespace: knative-serving
 spec:
   ingress:
     kourier:

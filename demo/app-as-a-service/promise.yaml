@@ -18,6 +18,20 @@ spec:
       clusterSelector:
         environment: dev
       workerClusterResources:
+      - apiVersion: operator.knative.dev/v1beta1
+        kind: KnativeServing
+        metadata:
+          name: knative
+          namespace: knative-serving
+        spec:
+          config:
+            domain:
+              local.gd: ""
+            network:
+              ingress-class: kourier.ingress.networking.knative.dev
+          ingress:
+            kourier:
+              enabled: true
       - apiVersion: v1
         kind: Secret
         metadata:
@@ -5961,6 +5975,10 @@ spec:
                 - containerPort: 9090
                   name: metrics
               serviceAccountName: knative-operator
+      - apiVersion: v1
+        kind: Namespace
+        metadata:
+          name: knative-serving
       - apiVersion: apiextensions.k8s.io/v1
         kind: CustomResourceDefinition
         metadata:
