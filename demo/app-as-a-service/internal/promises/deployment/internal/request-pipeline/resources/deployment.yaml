@@ -16,6 +16,12 @@ spec:
     spec:
       containers:
       - image: TBDIMAGE
+        readinessProbe:
+          httpGet:
+            path: /healthz
+            port: 8080
+          initialDelaySeconds: 3
+          periodSeconds: 3
         ports:
         - containerPort: 8080
         env:
@@ -28,5 +34,5 @@ spec:
             value: acid-TBDNAME-postgresql.default.svc.cluster.local
           - name: DBNAME
             value: TBDNAMEdb
-        imagePullPolicy: Always
+        imagePullPolicy: IfNotPresent
         name: TBDNAME
