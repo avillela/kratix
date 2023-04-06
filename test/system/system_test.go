@@ -211,8 +211,8 @@ func requestWithNameAndCommand(name string, containerCmds ...string) string {
 	}
 
 	contents := fmt.Sprintf(baseRequestYAML, args...)
-	fmt.Fprint(GinkgoWriter, "Resource Request:")
-	fmt.Fprint(GinkgoWriter, contents)
+	fmt.Fprintln(GinkgoWriter, "Resource Request:")
+	fmt.Fprintln(GinkgoWriter, contents)
 
 	ExpectWithOffset(1, ioutil.WriteFile(file.Name(), []byte(contents), 644)).NotTo(HaveOccurred())
 
