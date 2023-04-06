@@ -97,9 +97,8 @@ var _ = Describe("Kratix", func() {
 			It("runs all the containers in the pipeline", func() {
 				rrName := "rr-multi-container"
 				commands := []string{
-					`echo "configmap: multi-container-config" >> /input/container-0.txt
-					 kubectl create namespace mcns --dry-run=client -oyaml > /output/ns.yaml`,
-					`kubectl create configmap $(yq '.configmap' /input/container-0.txt) --namespace mcns --dry-run=client -oyaml > /output/configmap.yaml`,
+					`kubectl create namespace mcns --dry-run=client -oyaml > /output/ns.yaml`,
+					`kubectl create configmap multi-container-config --namespace mcns --dry-run=client -oyaml > /output/configmap.yaml`,
 				}
 
 				platform.kubectl("apply", "-f", requestWithNameAndCommand(rrName, commands...))
@@ -187,18 +186,33 @@ var _ = Describe("Kratix", func() {
 })
 
 func requestWithNameAndCommand(name string, containerCmds ...string) string {
-	args := []interface{}{name}
-	for i := 0; i < 2; i++ {
-		cmd := "echo 'noop'"
+	normalisedCmds := make([]string, 2)
+	for i := range normalisedCmds {
+		cmd := "cp /input/* /output;"
 		if len(containerCmds) > i {
-			cmd = containerCmds[i]
+			cmd += " " + containerCmds[i]
 		}
-		args = append(args, strings.ReplaceAll(cmd, "\n", ";"))
+		normalisedCmds[i] = strings.ReplaceAll(cmd, "\n", ";")
 	}
+
+	lci := len(normalisedCmds) - 1
+	lastCommand := normalisedCmds[lci]
+	if strings.HasSuffix(normalisedCmds[lci], ";") {
+		lastCommand = lastCommand[:len(lastCommand)-1]
+	}
+	normalisedCmds[lci] = lastCommand + "; rm /output/object.yaml"
+
 	file, err := ioutil.TempFile("", "kratix-test")
 	ExpectWithOffset(1, err).NotTo(HaveOccurred())
 
+	args := []interface{}{name}
+	for _, cmd := range normalisedCmds {
+		args = append(args, cmd)
+	}
+
 	contents := fmt.Sprintf(baseRequestYAML, args...)
+	fmt.Fprint(GinkgoWriter, "Resource Request:")
+	fmt.Fprint(GinkgoWriter, contents)
 
 	ExpectWithOffset(1, ioutil.WriteFile(file.Name(), []byte(contents), 644)).NotTo(HaveOccurred())
 
